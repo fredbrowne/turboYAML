@@ -1,0 +1,49 @@
+# Python-specific ignores
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyz
+*.pyw
+*.pyproj
+*.pycproj
+*.pyo.proj
+*.pyd.proj
+*.pyz.proj
+*.pyw.proj
+
+# IDE-specific ignores
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates
+*.bak
+*.user
+*.log
+
+# Build-related ignores
+build/
+dist/
+*.egg-info/
+*.egg/
+*.exe
+
+# Dependency management ignores
+*.venv/
+*.env/
+pip-wheel-metadata/
+
+# Jupyter Notebook specific ignores
+.ipynb_checkpoints/
+
+# macOS specific ignores
+.DS_Store
+
+# Editor-specific ignores
+*.sublime-workspace
+*.vscode/
