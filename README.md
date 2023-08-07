@@ -93,6 +93,9 @@ turboyaml is open-source software licensed under the MIT License.
 
 - 0.0.2 (2023-07-26): Added support for processing multiple files and unifying the output in a single YAML file. Implemented the `--yaml` parameter to specify the YAML output file. Updated the README with new functionalities and disclaimers. Improved error handling and logging.
 
+- 0.0.3 (2023-07-26): Bug fix and corrected typo
+
+- 0.0.4 (2023-08-01): Refactor of code and implemented multi-threading for performance optimization.
 
 ## Feedback
 
