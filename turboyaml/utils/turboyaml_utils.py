@@ -1,10 +1,11 @@
 import argparse
-import sys
+import asyncio
 import os
-from turboyaml.utils.openai_utils import send_to_openai
-from turboyaml.utils.dbt_utils import read_dbt_sql_file
+import sys
 
-MAX_CONCURRENT_TASKS = 4
+from turboyaml.utils.dbt_utils import read_dbt_sql_file
+from turboyaml.utils.openai_utils import send_to_openai
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -13,9 +14,7 @@ def parse_args():
     parser.add_argument(
         "--select", nargs="+", type=str, help="Path to the dbt model."
     )
-    parser.add_argument(
-        "--api-key", type=str, help="OpenAI API Key."
-    )
+    parser.add_argument("--api-key", type=str, help="OpenAI API Key.")
     parser.add_argument(
         "--yaml", type=str, help="Path to the YAML file for the output."
     )
@@ -26,8 +25,9 @@ def parse_args():
     if not any(vars(args).values()):
         parser.print_help()
         sys.exit(1)
-    
+
     return args
+
 
 def create_llm_prompt(sql_content, filename):
     header = """DO NOT ADD A HEADER TO DBT YAML.
@@ -49,6 +49,7 @@ IMPORTANT RULES:
 4. The context will always be ONE FULL SQL.
 5. DO NOT WRAP WITH MARKDOWN.
 6. The model name will always be the file name.
+7. NO NEW LINE BETWEEN COLUMNS!
 
 {header}
 
@@ -64,8 +65,6 @@ IMPORTANT RULES:
         description: markdown_string
       - name: column_name
         description: markdown_string
-
-IMPORTANT: NO NEW LINE BETWEEN COLUMN NAMES!
 
 INCLUDE TESTS IF YOU KNOW WHAT THE COLUMN NEEDS.
 
@@ -89,35 +88,46 @@ def save_yaml_file(directory, yaml_filename, yaml_content):
         with open(output_file_path, "w") as file:
             file.write("version: 2\n\nmodels:")
 
-    # Add new lines to the YAML content
-    yaml_content = "\n" + yaml_content + "\n"
-
     # Check if the YAML file already exists
     with open(output_file_path, "a") as file:
-        for line in yaml_content.splitlines(): 
-            indented_line = "  " + line
-            file.write(indented_line + "\n")
-
+        file.write("\n")
+        for line in yaml_content.splitlines():
+            if line.strip():
+                indented_line = "  " + line
+                file.write(indented_line + "\n")
+        file.write("\n")
     return output_file_path  # Return the output file path
 
-def generate_yaml_from_sql(
+
+MAX_CONCURRENT_TASKS = 5
+semaphore = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
+
+
+async def generate_yaml_from_sql(
     directory, file_name, api_key, model, yaml_filename
 ):
+    async with semaphore:
+        file_path = os.path.join(directory, file_name)
+        table_name = os.path.splitext(file_name)[0]
 
-    file_path = os.path.join(directory, file_name)
-    table_name = os.path.splitext(file_name)[0]
+        # Read the content of the DBT SQL file
+        sql_content = read_dbt_sql_file(file_path)
 
-    # Read the content of the DBT SQL file
-    sql_content = read_dbt_sql_file(file_path)
+        # Create the LLM prompt with the SQL content
+        llm_prompt = create_llm_prompt(sql_content, table_name)
 
-    # Create the LLM prompt with the SQL content
-    llm_prompt = create_llm_prompt(sql_content, table_name)
+        # Send the LLM prompt to the OpenAI API and retrieve the YAML output
+        print(f"Processing SQL file: {table_name}")
+        yaml_output = await send_to_openai(llm_prompt, api_key, model)
 
-    # Send the LLM prompt to the OpenAI API and retrieve the YAML output
-    print(f"Processing the dbt SQL file: {table_name}")
-    yaml_output = send_to_openai(llm_prompt, api_key, model)
+        yaml_output = yaml_output.choices[0]["message"]["content"]
+        # Check for markdown in the output
+        if yaml_output.startswith("```yaml"):
+            yaml_output = yaml_output[len("```yaml") :].lstrip()
+        if yaml_output.endswith("```"):
+            yaml_output = yaml_output[: -len("```")].rstrip()
+        return yaml_output
 
-    return yaml_output
 
 def set_destination_file(args_yaml=None):
     if args_yaml is None:

@@ -1,12 +1,21 @@
 # cli.py
 
+import asyncio
 import os
 
-from turboyaml.utils.openai_utils import is_valid_api_key, get_api_key
-from turboyaml.utils.dbt_utils import is_valid_sql_file
-from turboyaml.utils.turboyaml_utils import generate_yaml_from_sql, parse_args, set_destination_file, save_yaml_file
+import openai
 
-def main():
+from turboyaml.utils.dbt_utils import is_valid_sql_file
+from turboyaml.utils.openai_utils import get_api_key, is_valid_api_key
+from turboyaml.utils.turboyaml_utils import (
+    generate_yaml_from_sql,
+    parse_args,
+    save_yaml_file,
+    set_destination_file,
+)
+
+
+async def start_process():
     tasks = []
     args = parse_args()
 
@@ -47,7 +56,12 @@ def main():
                     raise ValueError(
                         "Please provide a valid SQL file with a '.sql' extension or check the file path."
                     )
-                tasks.append(generate_yaml_from_sql(file_path, file_name, api_key, model, yaml_filename))
+                task = asyncio.create_task(
+                    generate_yaml_from_sql(
+                        file_path, file_name, api_key, model, yaml_filename
+                    )
+                )
+                tasks.append(task)
         else:
             # If the argument is a single .sql file, process that file
             directory, file_name = os.path.split(file_path)
@@ -55,12 +69,40 @@ def main():
                 raise ValueError(
                     "Please provide a valid SQL file with a '.sql' extension or check the file path."
                 )
-            tasks.append(generate_yaml_from_sql(file_path, file_name, api_key, model, yaml_filename))
+            task = asyncio.create_task(
+                generate_yaml_from_sql(
+                    file_path, file_name, api_key, model, yaml_filename
+                )
+            )
+            tasks.append(task)
 
-    directory = args.select[0] if os.path.isdir(args.select[0]) else os.path.dirname(args.select[0])
+    results = await asyncio.gather(*tasks)
 
-    for task in tasks:
-        save_yaml_file(directory, yaml_filename, task)
+    directory = (
+        args.select[0]
+        if os.path.isdir(args.select[0])
+        else os.path.dirname(args.select[0])
+    )
+
+    for result in results:
+        save_yaml_file(directory, yaml_filename, result)
+
+
+def main():
+    try:
+        asyncio.run(start_process())
+        print("\n\n\nturboYAML processing completed successfully.")
+    except openai.error.APIConnectionError as e:
+        print("An error occurred while communicating with OpenAI.")
+        print(
+            "If you are in a macOS environment, please run the following code and try again:"
+        )
+        print("\n")
+        print("bash /Applications/Python*/Install\ Certificates.command")
+        print("\n\n")
+        print(
+            "More information on this issue here: https://github.com/microsoft/semantic-kernel/issues/627"
+        )
 
 
 if __name__ == "__main__":

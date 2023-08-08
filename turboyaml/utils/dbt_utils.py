@@ -1,5 +1,6 @@
 import os
 
+
 def is_valid_sql_file(file_path):
     if file_path is None:
         return False
@@ -17,4 +18,3 @@ def read_dbt_sql_file(file_path):
     with open(file_path, "r") as file:
         content = file.read()
     return content
-
