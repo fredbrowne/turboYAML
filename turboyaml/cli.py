@@ -91,7 +91,12 @@ async def start_process():
 def main():
     try:
         asyncio.run(start_process())
-        print("\n\n\nturboYAML processing completed successfully.")
+        print(
+            "\033[92m"
+            + "\u2713"
+            + "\033[0m"
+            + " turboYAML processing completed successfully."
+        )
     except openai.error.APIConnectionError as e:
         print("An error occurred while communicating with OpenAI.")
         print(
@@ -103,7 +108,3 @@ def main():
         print(
             "More information on this issue here: https://github.com/microsoft/semantic-kernel/issues/627"
         )
-
-
-if __name__ == "__main__":
-    main()
