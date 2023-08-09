@@ -3,9 +3,9 @@ import asyncio
 import os
 import sys
 
-from turboyaml.utils.version import VERSION
 from turboyaml.utils.dbt_utils import read_dbt_sql_file
 from turboyaml.utils.openai_utils import send_to_openai
+from turboyaml.utils.version import VERSION
 
 
 def parse_args():

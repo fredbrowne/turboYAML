@@ -3,8 +3,8 @@
 import asyncio
 import os
 
-from turboyaml.utils.version import VERSION
 import openai
+
 from turboyaml.utils.dbt_utils import is_valid_sql_file
 from turboyaml.utils.openai_utils import get_api_key, is_valid_api_key
 from turboyaml.utils.turboyaml_utils import (
@@ -13,6 +13,7 @@ from turboyaml.utils.turboyaml_utils import (
     save_yaml_file,
     set_destination_file,
 )
+from turboyaml.utils.version import VERSION
 
 
 async def start_process():
