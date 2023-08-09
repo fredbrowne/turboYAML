@@ -101,7 +101,7 @@ def save_yaml_file(directory, yaml_filename, yaml_content):
     return output_file_path  # Return the output file path
 
 
-MAX_CONCURRENT_TASKS = 5
+MAX_CONCURRENT_TASKS = 4
 semaphore = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
 
