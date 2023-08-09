@@ -3,6 +3,7 @@ import asyncio
 import os
 import sys
 
+from turboyaml.utils.version import VERSION
 from turboyaml.utils.dbt_utils import read_dbt_sql_file
 from turboyaml.utils.openai_utils import send_to_openai
 
@@ -18,6 +19,7 @@ def parse_args():
     parser.add_argument(
         "--yaml", type=str, help="Path to the YAML file for the output."
     )
+    parser.add_argument("--version", action="version", version=VERSION)
 
     args = parser.parse_args()
 
