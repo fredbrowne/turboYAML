@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="turboyaml",
-    version="0.0.4",
+    version="0.0.5",
     author="Fred Setra",
     author_email="fred.setra@gmail.com",
     description="An AI-powered CLI tool for converting DBT SQL files to YAML using OpenAI.",

@@ -72,7 +72,7 @@ async def start_process():
                 )
             task = asyncio.create_task(
                 generate_yaml_from_sql(
-                    file_path, file_name, api_key, model, yaml_filename
+                    directory, file_name, api_key, model, yaml_filename
                 )
             )
             tasks.append(task)
