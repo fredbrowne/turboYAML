@@ -3,10 +3,10 @@
 import asyncio
 import os
 
-import openai
+from openai import OpenAI, APIConnectionError, OpenAIError
 
 from turboyaml.utils.dbt_utils import is_valid_sql_file
-from turboyaml.utils.openai_utils import get_api_key, is_valid_api_key
+from turboyaml.utils.openai_utils import get_client
 from turboyaml.utils.turboyaml_utils import (
     generate_yaml_from_sql,
     parse_args,
@@ -20,22 +20,51 @@ async def start_process():
     tasks = []
     args = parse_args()
 
-    # Get the OpenAI API key from command-line argument or environment variables
-    api_key = get_api_key(args.api_key)
+    # Set the API key
+    api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
+    if not api_key and not os.environ.get("OPENAI_API_KEY"):
+        raise ValueError("Please provide a valid OpenAI API key using --api_key option or set it as the OPENAI_API_KEY environment variable.")
 
-    # Verify if a valid OpenAI API key is provided
-    if not api_key:
+    # Initialize the OpenAI API client
+    try:
+        client = get_client(api_key)
+    except ValueError as e:
         raise ValueError(
-            "Please provide a valid OpenAI API key using --api_key option or set it as the OPENAI_API_KEY environment variable."
-        )
-    # Verify if a valid OpenAI API key is provided
-    if not is_valid_api_key(api_key):
-        raise ValueError(
-            "Please provide a valid OpenAI API key using --api_key option or set it as the OPENAI_API_KEY environment variable."
+            "An error occurred while initializing the OpenAI API client. Please check your API key."
         )
 
-    model = "gpt-4"
 
+    model = "gpt-4-turbo-preview"
+
+    # Log Analyzer
+    # Process logs if --logs option is provided
+    if args.logs:
+        from turboyaml.utils.dbt_utils import (
+            extract_error_and_keywords,
+            isolate_log_section, 
+            select_log_entry_from_list,
+              present_output
+        )
+        from turboyaml.utils.turboyaml_utils import is_valid_result
+        try:
+            selected_uuid = select_log_entry_from_list(args.logs)
+            log_section = isolate_log_section(selected_uuid, args.logs)
+            # retry 3 times to extract error and keywords
+            retry = 1
+            while retry < 4:
+                try:
+                    result = extract_error_and_keywords(log_section, client)
+                    if is_valid_result(result):
+                        present_output(result)
+                        return None
+                    else:
+                        retry += 1
+                except:
+                    retry += 1
+            print("An error occurred while processing the logs.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        return None
     # If the --yaml parameter is not provided, set the yaml_filename to the file_name without .sql extension
     yaml_filename = set_destination_file(args.yaml)
 
@@ -98,7 +127,7 @@ def main():
             + "\033[0m"
             + " turboYAML processing completed successfully."
         )
-    except openai.error.APIConnectionError as e:
+    except APIConnectionError as e:
         print("An error occurred while communicating with OpenAI.")
         print(
             "If you are in a macOS environment, please run the following code and try again:"

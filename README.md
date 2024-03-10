@@ -9,11 +9,14 @@ turboyaml is an AI-powered CLI utility designed to seamlessly convert complex db
 ## Key Features
 
 - **AI-Powered Precision**: Leverage the state-of-the-art OpenAI GPT-4 to ensure accurate and error-free YAML conversion, even for intricate SQL data models.
+
 - **Speed and Efficiency**: turboyaml works at lightning speed, delivering YAML output within seconds, saving valuable time for data teams.
 
 - **Multiple File Processing**: turboyaml now supports processing multiple dbt SQL files or an entire folder of files in a single command. Simply provide the folder path as the --select option, and turboyaml will process all the .sql files in the folder.
 
 - **Append to Existing YAML**: turboyaml can append the generated YAML content to an existing YAML file instead of creating a new one. If the output YAML file already exists, turboyaml will append the new YAML content to it.
+
+- **Log Analyzer Functionality**: Introducing an AI-powered log analyzer to enhance debugging. With the `--logs` option, automatically analyze DBT run logs for errors and receive AI-generated suggestions for corrections. Default log path is `/logs/dbt.log`, streamlining error resolution for smoother workflows.
 
 ## Installation
 
@@ -75,6 +78,22 @@ To harness the full potential of turboyaml in converting dbt SQL files to YAML, 
 
    - By setting the API key as an environment variable, you don't need to provide it explicitly every time you run turboyaml.
 
+5. **Log Analyzer Functionality**
+
+   - **AI-Powered Log Analysis**: Utilize the `--logs` option to automatically analyze DBT run logs. This feature identifies errors and provides AI-generated suggestions for correction, streamlining the debugging process.
+
+   - **Default Log Path**: If not specified, TurboYAML looks for logs at `/logs/dbt.log` by default, making it easier to get started without additional configuration.
+
+   - **Efficient Error Resolution**: With precise error pinpointing and actionable suggestions, the log analyzer aids in quickly resolving issues encountered during YAML generation, ensuring smoother data engineering workflows.
+
+    - To use this feature, simply run TurboYAML with the `--logs` option with your command:
+
+    ```bash
+    turboyaml --api-key <your_openai_api_key> --logs /path/to/your/logfile.log
+    ```
+
+This addition enriches the troubleshooting process, leveraging AI to enhance productivity and minimize errors in your YAML configurations.
+
 ## Explore dbt SQL Models
 
 For a diverse collection of SQL models and examples, you can explore the official dbt documentation:
@@ -102,6 +121,10 @@ turboyaml is open-source software licensed under the MIT License.
 - 0.0.3 (2023-07-26): Bug fix and corrected typo
 
 - 0.0.4 (2023-08-08): Refactor of code and implemented async processing for performance optimization.
+
+- 0.0.5 (2023-08-25): Minor bug fix on async function
+
+- 0.0.6 (2024-03-09): Upgrade OpenAI base library version to 1.x, update base model, added new log analysis functionality.
 
 ## Feedback
 

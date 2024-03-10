@@ -15,11 +15,18 @@ def parse_args():
     parser.add_argument(
         "--select", nargs="+", type=str, help="Path to the dbt model."
     )
-    parser.add_argument("--api-key", type=str, help="OpenAI API Key.")
+    parser.add_argument(
+        "--api-key", type=str, help="OpenAI API Key."
+    )
     parser.add_argument(
         "--yaml", type=str, help="Path to the YAML file for the output."
     )
-    parser.add_argument("--version", action="version", version=VERSION)
+    parser.add_argument(
+        "--version", action="version", version=VERSION
+    )
+    parser.add_argument(
+        "--logs", metavar="PATH", nargs="?", const="logs/dbt.log", help="Path to the log file"
+    )
 
     args = parser.parse_args()
 
@@ -27,6 +34,15 @@ def parse_args():
     if not any(vars(args).values()):
         parser.print_help()
         sys.exit(1)
+
+    # Validate the logs path if provided
+    if args.logs:
+        # If logs path is provided, ensure it's a .log file
+        if args.logs != "logs/dbt.log" and not args.logs.endswith(".log"):
+            parser.error("The provided log file path must be a .log file.")
+        # If logs path is provided, ensure it exists
+        if not os.path.isfile(args.logs):
+            parser.error("The provided log file path does not exist or is not a file.")
 
     return args
 
@@ -111,18 +127,15 @@ async def generate_yaml_from_sql(
     async with semaphore:
         file_path = os.path.join(directory, file_name)
         table_name = os.path.splitext(file_name)[0]
-
         # Read the content of the DBT SQL file
         sql_content = read_dbt_sql_file(file_path)
-
         # Create the LLM prompt with the SQL content
         llm_prompt = create_llm_prompt(sql_content, table_name)
-
         # Send the LLM prompt to the OpenAI API and retrieve the YAML output
         print(f"Processing SQL file: {table_name}")
         yaml_output = await send_to_openai(llm_prompt, api_key, model)
-
-        yaml_output = yaml_output.choices[0]["message"]["content"]
+        print(f"Completed processing SQL file: {table_name}")
+        yaml_output = yaml_output.choices[0].message.content
         # Check for markdown in the output
         if yaml_output.startswith("```yaml"):
             yaml_output = yaml_output[len("```yaml") :].lstrip()
@@ -139,3 +152,9 @@ def set_destination_file(args_yaml=None):
             "Please provide a valid YAML file with a '.yml' extension or check the file path."
         )
     return args_yaml
+
+def is_valid_result(result):
+    expected_keys = ["errors", "keywords", "dbt_models", "uuid", "correction_suggestion"]
+    if not isinstance(result, dict):
+        return False
+    return all(key in result for key in expected_keys)
