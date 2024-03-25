@@ -4,7 +4,7 @@
 
 ## Overview
 
-turboyaml is an AI-powered CLI utility designed to seamlessly convert complex dbt (Data Build Tool) SQL files into YAML format. With the power of OpenAI's advanced GPT-4 language model, this tool empowers data engineers and analysts to accelerate their data modeling and configuration management workflow.
+turboyaml is an AI-powered CLI utility designed to seamlessly generate/augment YAML documentation for complex dbt `.sql` files. With the power of OpenAI's advanced GPT-4 language model, this tool empowers data engineers and analysts to accelerate their data modeling and configuration management workflow.
 
 ## Key Features
 
